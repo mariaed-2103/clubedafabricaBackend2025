@@ -1,6 +1,6 @@
 package com.inter.clubedafabrica.repositories;
 
-import com.seuprojeto.model.Profile;
+import com.inter.clubedafabrica.entities.Profile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
