@@ -22,6 +22,7 @@ public class AuthService {
     private AdminCodeRepository adminCodeRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     // ======================
     // LOGIN
@@ -66,30 +67,30 @@ public class AuthService {
         }
 
         Profile user = new Profile();
-        user.setName(dto.name());
-        user.setEmail(dto.email());
-        user.setPhone(dto.phone());
-        user.setCpf(dto.cpf());
+            user.setName(dto.name());
+            user.setEmail(dto.email());
+            user.setPhone(dto.phone());
+            user.setCpf(dto.cpf());
+            user.setPasswordHash(encoder.encode(dto.password()));
+            user.setUserType(dto.userType());
+            user.setStatus("inactive"); // ou "active", dependendo da regra
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdatedAt(LocalDateTime.now());
 
-        // 🔥 **CORREÇÃO 1 — userType sendo salvo**
-        user.setUserType(dto.userType());
+            // se for admin, valida de novo no back
+            if ("admin".equals(dto.userType())) {
+                boolean isValid = adminCodeRepository.existsByCodeAndIsUsedFalse(dto.adminCode());
+                if (!isValid) {
+                    throw new RuntimeException("Código de administrador inválido ou já utilizado.");
+                }
+            }
 
-        // salva senha criptografada
-        user.setPasswordHash(passwordEncoder.encode(dto.password()));
+            Profile savedUser = profileRepository.save(user);
 
-        // 🔥 **CORREÇÃO 2 — usuário nasce como ACTIVE**
-        user.setStatus("active");
+            if ("admin".equals(dto.userType())) {
+                adminCodeRepository.markAsUsed(dto.adminCode(), savedUser.getId());
+            }
 
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-
-        Profile savedUser = profileRepository.save(user);
-
-        // 🔥 SE ADMIN → marcar código como usado
-        if ("admin".equals(dto.userType())) {
-            adminCodeRepository.markAsUsed(dto.adminCode(), savedUser.getId());
-        }
-
-        return savedUser;
+            return savedUser;
     }
 }
