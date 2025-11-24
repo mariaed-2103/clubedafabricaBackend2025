@@ -73,7 +73,11 @@ public class AuthService {
             user.setCpf(dto.cpf());
             user.setPasswordHash(encoder.encode(dto.password()));
             user.setUserType(dto.userType());
-            user.setStatus("inactive"); // ou "active", dependendo da regra
+            if ("admin".equals(dto.userType())) {
+                user.setStatus("active");
+            } else {
+                user.setStatus("inactive");
+            }
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());
 
