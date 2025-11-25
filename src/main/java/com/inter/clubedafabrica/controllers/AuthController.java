@@ -1,6 +1,7 @@
 package com.inter.clubedafabrica.controllers;
 
 import com.inter.clubedafabrica.entities.DTOs.LoginDTO;
+import com.inter.clubedafabrica.entities.DTOs.LoginResponse;
 import com.inter.clubedafabrica.entities.DTOs.SignupDTO;
 import com.inter.clubedafabrica.entities.Profile;
 import com.inter.clubedafabrica.services.AdminCodeService;
@@ -15,6 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000") // endereço do front-end
 public class AuthController {
 
     private final AuthService authService;
@@ -38,13 +40,27 @@ public class AuthController {
     // ======================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
-        var user = authService.login(dto);
+        var userOpt = authService.login(dto);
 
-        return user
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.status(401).build());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Credenciais inválidas!");
+        }
 
+        Profile p = userOpt.get();
+
+        LoginResponse res = new LoginResponse(
+                p.getId(),
+                p.getName(),
+                p.getEmail(),
+                p.getPhone(),
+                p.getCpf(),
+                p.getStatus(),
+                p.getUserType()
+        );
+
+        return ResponseEntity.ok(res);
     }
+
 
     // ======================
     // VERIFY ADMIN CODE

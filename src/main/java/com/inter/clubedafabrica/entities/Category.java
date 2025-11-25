@@ -2,7 +2,6 @@ package com.inter.clubedafabrica.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "categories")
@@ -13,10 +12,8 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
-    private String description;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private String description; // pode ser null
 }

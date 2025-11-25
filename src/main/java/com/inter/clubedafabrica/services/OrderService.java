@@ -89,5 +89,12 @@ public class OrderService {
         .toList();
     }
 
+    public List<OrderResponseDTO> getAllOrders() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAllOrders'");
+    }
+
+    
+
 
 }

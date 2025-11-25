@@ -2,33 +2,33 @@ package com.inter.clubedafabrica.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
-@Table(name = "products")
+@Table(name = "products") // ajuste se sua tabela tiver nome diferente
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(nullable = false)
     private Double price;
 
-    private Integer stock;
+    @Column(nullable = false)
+    private Integer stock; // aqui está o campo stock — getStock() / setStock() serão gerados
 
-    private String image_url;
-
-    @Column(name = "category_id")
-    private Long categoryId;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private com.inter.clubedafabrica.entities.Category category;
 }

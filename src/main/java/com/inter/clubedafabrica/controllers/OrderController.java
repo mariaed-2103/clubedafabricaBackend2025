@@ -34,4 +34,10 @@ public class OrderController {
         return orderService.getOrdersByUser(userId);
     }
 
+    @GetMapping
+    public List<OrderResponseDTO> getAllOrders() {
+        return orderService.getAllOrders();
+    }
+
+
 }
