@@ -11,14 +11,15 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Desativa CSRF para facilitar desenvolvimento
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // Permite abrir o H2 Console
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll() // libera acesso ao h2-console
-                        .anyRequest().permitAll()
-                );
+            .cors(cors -> {})
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/category/**").permitAll()
+                .anyRequest().permitAll()
+            );
 
         return http.build();
     }

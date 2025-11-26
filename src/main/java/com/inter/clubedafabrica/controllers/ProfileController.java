@@ -58,11 +58,9 @@ public class ProfileController {
 
         Profile existing = optional.get();
 
-        if (updates.getName() != null) existing.setName(updates.getName());
-        if (updates.getPhone() != null) existing.setPhone(updates.getPhone());
-        if (updates.getCpf() != null) existing.setCpf(updates.getCpf());
-        if (updates.getAvatarUrl() != null) existing.setAvatarUrl(updates.getAvatarUrl());
-        if (updates.getStatus() != null) existing.setStatus(updates.getStatus());
+        if (updates.getStatus() != null) {
+        existing.setStatus(updates.getStatus());
+        }
 
         repo.save(existing);
 
