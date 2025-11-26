@@ -1,15 +1,18 @@
 package com.inter.clubedafabrica.repositories;
 
-import java.util.List;
-
+import com.inter.clubedafabrica.entities.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import com.inter.clubedafabrica.entities.Order;
+import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    List<Order> findByUserIdOrderByCreatedAtDesc(Long userId);
-}
+    List<Order> findByUserId(Long userId);
 
+    List<Order> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    List<Order> findByIdIn(List<Long> ids);
+
+    List<Order> findByStatus(String status);
+}

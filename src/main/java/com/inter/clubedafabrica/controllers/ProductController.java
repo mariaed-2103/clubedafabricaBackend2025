@@ -20,6 +20,7 @@ public class ProductController {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    // Criar produto
     @PostMapping
     public Product create(@RequestBody Product product) {
         if (product.getCategory() != null) {
@@ -30,11 +31,13 @@ public class ProductController {
         return productRepository.save(product);
     }
 
+    // Listar todos os produtos
     @GetMapping
     public List<Product> list() {
         return productRepository.findAll();
     }
 
+    // Atualizar produto
     @PutMapping("/{id}")
     public Product update(@PathVariable Long id, @RequestBody Product updated) {
         return productRepository.findById(id).map(existing -> {
@@ -53,9 +56,11 @@ public class ProductController {
             }
 
             return productRepository.save(existing);
+
         }).orElseThrow(() -> new RuntimeException("Produto não encontrado"));
     }
 
+    // Deletar produto
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         productRepository.deleteById(id);

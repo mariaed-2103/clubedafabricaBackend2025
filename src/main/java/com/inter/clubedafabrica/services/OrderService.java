@@ -16,6 +16,7 @@ import com.inter.clubedafabrica.entities.DTOs.OrderItemResponseDTO;
 
 @Service
 public class OrderService {
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository itemRepository;
 
@@ -26,22 +27,18 @@ public class OrderService {
 
     public Order createOrder(OrderRequestDTO dto) {
 
-        // Calcular total do pedido
         double total = dto.items().stream()
                 .mapToDouble(i -> i.unitPrice() * i.quantity())
                 .sum();
 
-        // Criar entidade Order
         Order order = new Order();
         order.setUserId(dto.userId());
         order.setStatus("pending");
         order.setTotalAmount(total);
         order.setCreatedAt(LocalDateTime.now());
 
-        // Salvar pedido
         Order savedOrder = orderRepository.save(order);
 
-        // Salvar itens
         for (OrderItemDTO i : dto.items()) {
 
             OrderItem item = new OrderItem();
@@ -58,43 +55,73 @@ public class OrderService {
     }
 
     public List<OrderResponseDTO> getOrdersByUser(Long userId) {
-    List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
-    return orders.stream()
-        .map(order -> {
-            // Buscar itens do pedido
-            List<OrderItem> items = itemRepository.findByOrderId(order.getId());
+        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
-            List<OrderItemResponseDTO> itemDTOs = items.stream()
-                .map(item -> new OrderItemResponseDTO(
-                    item.getId(),
-                    item.getProductId(),
-                    item.getQuantity(),
-                    item.getUnitPrice(),
-                    item.getTotal(),
-                    "Produto " + item.getProductId(), // placeholder, depois ligamos na tabela de produtos
-                    null // sem imagem por enquanto
-                ))
+        return orders.stream()
+                .map(order -> {
+                    List<OrderItem> items = itemRepository.findByOrderId(order.getId());
+
+                    List<OrderItemResponseDTO> itemDTOs = items.stream()
+                        .map(item -> new OrderItemResponseDTO(
+                                item.getId(),
+                                item.getProductId(),
+                                item.getQuantity(),
+                                item.getUnitPrice(),
+                                item.getTotal(),
+                                "Produto " + item.getProductId(),
+                                null
+                        ))
+                        .toList();
+
+                    return new OrderResponseDTO(
+                            order.getId(),
+                            order.getUserId(),
+                            order.getStatus(),
+                            order.getTotalAmount(),
+                            order.getCreatedAt(),
+                            itemDTOs
+                    );
+                })
                 .toList();
-
-            return new OrderResponseDTO(
-                order.getId(),
-                order.getUserId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                order.getCreatedAt(),
-                itemDTOs
-            );
-        })
-        .toList();
     }
 
     public List<OrderResponseDTO> getAllOrders() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllOrders'");
+        return orderRepository.findAll().stream()
+                .map(order -> {
+                    List<OrderItem> items = itemRepository.findByOrderId(order.getId());
+
+                    List<OrderItemResponseDTO> itemDTOs = items.stream()
+                            .map(item -> new OrderItemResponseDTO(
+                                    item.getId(),
+                                    item.getProductId(),
+                                    item.getQuantity(),
+                                    item.getUnitPrice(),
+                                    item.getTotal(),
+                                    "Produto " + item.getProductId(),
+                                    null
+                            ))
+                            .toList();
+
+                    return new OrderResponseDTO(
+                            order.getId(),
+                            order.getUserId(),
+                            order.getStatus(),
+                            order.getTotalAmount(),
+                            order.getCreatedAt(),
+                            itemDTOs
+                    );
+                })
+                .toList();
     }
 
-    
+    public List<Order> getCompletedOrders() {
+        return orderRepository.findByStatus("completed");
+    }
 
-
+    public List<OrderItem> getOrderItems(List<Long> ids) {
+        return itemRepository.findByOrderIdIn(ids);
+    }
 }
+
+
