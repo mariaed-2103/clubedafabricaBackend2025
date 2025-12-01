@@ -1,6 +1,7 @@
 package com.inter.clubedafabrica.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -13,23 +14,33 @@ public class Profile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 150)
     private String name;
+
+    @Column(nullable = false, unique = true, length = 150)
     private String email;
-    private String phone;
+
+    @Column(length = 20)
+    private String phone; // pode ser nulo
+
+    @Column(nullable = false, unique = true, length = 14)
     private String cpf;
 
-    @Column(name = "avatar_url")
-    private String avatarUrl;
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl; // opcional
 
+    @Column(nullable = false, length = 20)
     private String status; // active / inactive
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt; // pode ser nulo
 
-    private String passwordHash; // senha criptografada
+    @Column(nullable = false)
+    private String passwordHash;
 
-    private String userType; // <-- ADICIONADO (user/admin)
+    @Column(nullable = false, length = 20)
+    private String userType; // user / admin
 }

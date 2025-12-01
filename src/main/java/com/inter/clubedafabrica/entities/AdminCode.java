@@ -3,6 +3,7 @@ package com.inter.clubedafabrica.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "admin_codes")
@@ -13,20 +14,25 @@ public class AdminCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
+    @Column(nullable = false, length = 50)
     private String code;
 
-    @Column(name = "created_by")
+    @NotNull
+    @Column(name = "created_by", nullable = false)
     private Long createdBy;
 
-    @Column(name = "is_used")
-    private Boolean isUsed;
+    @NotNull
+    @Column(name = "is_used", nullable = false)
+    private Boolean isUsed = false;
 
     @Column(name = "used_by")
-    private Long usedBy;
+    private Long usedBy; // pode ser nulo
 
-    @Column(name = "created_at")
+    @NotNull
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "used_at")
-    private LocalDateTime usedAt;
+    private LocalDateTime usedAt; // pode ser nulo
 }

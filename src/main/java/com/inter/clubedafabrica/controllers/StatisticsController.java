@@ -31,7 +31,7 @@ public class StatisticsController {
         List<Order> completedOrders = orderRepository.findByStatus("completed");
         List<Long> orderIds = completedOrders.stream().map(Order::getId).toList();
 
-        List<OrderItem> items = orderItemRepository.findByOrderIdIn(orderIds);
+        List<OrderItem> items = orderItemRepository.findByOrder_IdIn(orderIds);
         List<Product> products = productRepository.findAll();
 
         // --- HISTOGRAMA ---
@@ -55,15 +55,12 @@ public class StatisticsController {
         Map<String, Double> brandRevenue = new HashMap<>();
 
         for (OrderItem item : items) {
-            Product p = products.stream()
-                .filter(prod -> prod.getId().equals(item.getProductId()))
-                .findFirst()
-                .orElse(null);
+    
+            Product p = item.getProduct();  // 🔥 Agora funciona
 
             if (p == null) continue;
 
             String brand = p.getName().split("-")[0].trim();
-
             double revenue = item.getUnitPrice() * item.getQuantity();
 
             brandRevenue.put(brand, brandRevenue.getOrDefault(brand, 0.0) + revenue);
@@ -72,11 +69,24 @@ public class StatisticsController {
         stats.put("brands", brandRevenue);
 
         // --- PRODUTO MAIS VENDIDO ---
+        
+        // --- PRODUTO MAIS VENDIDO ---
         Map<Long, Integer> productQty = new HashMap<>();
 
         for (OrderItem item : items) {
-            productQty.put(item.getProductId(),
-                productQty.getOrDefault(item.getProductId(), 0) + item.getQuantity()
+
+            Product product = item.getProduct();
+
+            if (product == null) {
+                // item antigo ou inconsistente → pula
+                continue;
+            }
+
+            Long productId = product.getId();
+
+            productQty.put(
+                    productId,
+                    productQty.getOrDefault(productId, 0) + item.getQuantity()
             );
         }
 
@@ -87,13 +97,13 @@ public class StatisticsController {
                 .orElse(null);
 
         if (topProductId != null) {
-            Product top = products.stream()
+            Product topProduct = products.stream()
                     .filter(p -> p.getId().equals(topProductId))
                     .findFirst()
                     .orElse(null);
 
             stats.put("mostSold", Map.of(
-                    "product", top,
+                    "product", topProduct,
                     "quantity", productQty.get(topProductId)
             ));
         }

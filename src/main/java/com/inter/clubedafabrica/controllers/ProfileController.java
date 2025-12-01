@@ -58,9 +58,37 @@ public class ProfileController {
 
         Profile existing = optional.get();
 
-        if (updates.getStatus() != null) {
-        existing.setStatus(updates.getStatus());
+        // Atualizar nome
+        if (updates.getName() != null && !updates.getName().isBlank()) {
+            existing.setName(updates.getName());
         }
+
+        // Atualizar email
+        if (updates.getEmail() != null && !updates.getEmail().isBlank()) {
+
+            // Impedir e-mail duplicado
+            if (repo.findByEmail(updates.getEmail())
+                    .filter(u -> !u.getId().equals(existing.getId()))
+                    .isPresent()) {
+                return ResponseEntity.status(400).body("E-mail já está em uso.");
+            }
+
+            existing.setEmail(updates.getEmail());
+        }
+
+        // Atualizar telefone
+        if (updates.getPhone() != null && !updates.getPhone().isBlank()) {
+            String cleanPhone = updates.getPhone().replaceAll("\\D", "");
+            existing.setPhone(cleanPhone);
+        }
+
+        // Atualizar avatarUrl
+        if (updates.getAvatarUrl() != null) {
+            existing.setAvatarUrl(updates.getAvatarUrl());
+        }
+
+        // updatedAt
+        existing.setUpdatedAt(java.time.LocalDateTime.now());
 
         repo.save(existing);
 

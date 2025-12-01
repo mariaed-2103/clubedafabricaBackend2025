@@ -6,6 +6,8 @@ import com.inter.clubedafabrica.entities.DTOs.SignupDTO;
 import com.inter.clubedafabrica.entities.Profile;
 import com.inter.clubedafabrica.services.AdminCodeService;
 import com.inter.clubedafabrica.services.AuthService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -26,7 +28,7 @@ public class AuthController {
     // SIGNUP
     // ======================
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupDTO dto) {
+    public ResponseEntity<?> signup(@Valid @RequestBody SignupDTO dto) {
         try {
             Profile p = authService.signup(dto);
             return ResponseEntity.ok(p);

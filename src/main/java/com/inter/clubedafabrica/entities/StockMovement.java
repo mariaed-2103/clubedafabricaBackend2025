@@ -13,22 +13,24 @@ public class StockMovement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id")
+    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "movement_type")
+    @Column(name = "movement_type", nullable = false, length = 30)
     private String movementType;
 
+    @Column(nullable = false)
     private Integer quantity;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @Column(name = "order_id")
-    private Long orderId;
+    private Long orderId; // pode ser nulo
 
-    private String observation;
+    @Column(columnDefinition = "TEXT")
+    private String observation; // opcional
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

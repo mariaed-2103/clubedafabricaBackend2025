@@ -1,7 +1,7 @@
 package com.inter.clubedafabrica.entities;
 
-
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -14,11 +14,15 @@ public class UserRole {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
+    @NotNull
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @NotNull
+    @Column(nullable = false, length = 30)
     private String role;
 
-    @Column(name = "created_at")
+    @NotNull
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

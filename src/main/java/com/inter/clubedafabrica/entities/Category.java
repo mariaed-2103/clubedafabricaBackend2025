@@ -1,6 +1,7 @@
 package com.inter.clubedafabrica.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Entity
@@ -12,8 +13,10 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @NotNull
+    @Column(nullable = false, length = 100)
     private String name;
 
-    private String description; // pode ser null
+    @Column(columnDefinition = "TEXT")
+    private String description; // pode ser nulo
 }

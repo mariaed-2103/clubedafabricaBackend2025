@@ -51,50 +51,49 @@ public class AuthService {
     // ======================
     public Profile signup(SignupDTO dto) throws Exception {
 
-        // Senhas
-        if (!dto.password().equals(dto.confirmPassword()))
+        // Validação de senha
+        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
             throw new Exception("Senhas não coincidem.");
+        }
 
         // Email duplicado
-        if (profileRepository.findByEmail(dto.email()).isPresent())
+        if (profileRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new Exception("E-mail já cadastrado.");
+        }
+
+        // CPF duplicado
+        if (profileRepository.findByCpf(dto.getCpf()).isPresent()) {
+            throw new Exception("CPF já cadastrado.");
+        }
 
         // Se for admin → validar código
-        if ("admin".equals(dto.userType())) {
-            if (dto.adminCode() == null || !adminCodeRepository.existsByCodeAndIsUsedFalse(dto.adminCode())) {
+        if ("admin".equalsIgnoreCase(dto.getUserType())) {
+            if (dto.getAdminCode() == null ||
+                    !adminCodeRepository.existsByCodeAndIsUsedFalse(dto.getAdminCode())) {
                 throw new Exception("Código de administrador inválido.");
             }
         }
 
+        // Criar o usuário
         Profile user = new Profile();
-            user.setName(dto.name());
-            user.setEmail(dto.email());
-            user.setPhone(dto.phone());
-            user.setCpf(dto.cpf());
-            user.setPasswordHash(encoder.encode(dto.password()));
-            user.setUserType(dto.userType());
-            if ("admin".equals(dto.userType())) {
-                user.setStatus("active");
-            } else {
-                user.setStatus("inactive");
-            }
-            user.setCreatedAt(LocalDateTime.now());
-            user.setUpdatedAt(LocalDateTime.now());
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        user.setCpf(dto.getCpf());
+        user.setPasswordHash(encoder.encode(dto.getPassword()));
+        user.setUserType(dto.getUserType().toLowerCase());
+        user.setStatus(dto.getUserType().equalsIgnoreCase("admin") ? "active" : "inactive");
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(null);
 
-            // se for admin, valida de novo no back
-            if ("admin".equals(dto.userType())) {
-                boolean isValid = adminCodeRepository.existsByCodeAndIsUsedFalse(dto.adminCode());
-                if (!isValid) {
-                    throw new RuntimeException("Código de administrador inválido ou já utilizado.");
-                }
-            }
+        Profile savedUser = profileRepository.save(user);
 
-            Profile savedUser = profileRepository.save(user);
+        // Marcar adminCode como usado
+        if ("admin".equalsIgnoreCase(dto.getUserType())) {
+            adminCodeRepository.markAsUsed(dto.getAdminCode(), savedUser.getId());
+        }
 
-            if ("admin".equals(dto.userType())) {
-                adminCodeRepository.markAsUsed(dto.adminCode(), savedUser.getId());
-            }
-
-            return savedUser;
+        return savedUser;
     }
+
 }

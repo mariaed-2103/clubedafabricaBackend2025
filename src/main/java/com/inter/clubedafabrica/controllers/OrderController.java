@@ -1,20 +1,22 @@
 package com.inter.clubedafabrica.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.inter.clubedafabrica.entities.Order;
-import com.inter.clubedafabrica.entities.OrderItem;
 import com.inter.clubedafabrica.entities.DTOs.OrderRequestDTO;
 import com.inter.clubedafabrica.entities.DTOs.OrderResponseDTO;
 
 import com.inter.clubedafabrica.services.OrderService;
 import com.inter.clubedafabrica.repositories.OrderItemRepository;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,13 +50,23 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
-    @GetMapping("/completed")
-    public List<Order> getCompletedOrders() {
-        return orderService.getCompletedOrders();
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body
+    ) {
+        String newStatus = body.get("status");
+
+        if (newStatus == null || newStatus.isBlank()) {
+            return ResponseEntity.badRequest().body("Status é obrigatório");
+        }
+
+        try {
+            OrderResponseDTO updated = orderService.updateOrderStatus(id, newStatus);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
     }
 
-    @PostMapping("/items")
-    public List<OrderItem> getOrderItems(@RequestBody List<Long> ids) {
-        return orderService.getOrderItems(ids);
-    }
 }
