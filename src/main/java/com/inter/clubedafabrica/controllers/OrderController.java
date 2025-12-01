@@ -1,56 +1,50 @@
 package com.inter.clubedafabrica.controllers;
 
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import com.inter.clubedafabrica.entities.Order;
 import com.inter.clubedafabrica.entities.DTOs.OrderRequestDTO;
 import com.inter.clubedafabrica.entities.DTOs.OrderResponseDTO;
-
 import com.inter.clubedafabrica.services.OrderService;
-import com.inter.clubedafabrica.repositories.OrderItemRepository;
 
+import com.inter.clubedafabrica.repositories.OrderRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "*")
 public class OrderController {
 
-    private final OrderService orderService;
-    private final OrderItemRepository orderItemRepository; 
+    @Autowired
+    private OrderRepository orderRepository;
 
-    // Construtor com os 2 parâmetros
-    public OrderController(OrderService orderService, OrderItemRepository orderItemRepository) {
-        this.orderService = orderService;
-        this.orderItemRepository = orderItemRepository;
-    }
+    @Autowired
+    private OrderService orderService;
+
 
     @PostMapping
-    public Order createOrder(@RequestBody OrderRequestDTO dto) {
-        return orderService.createOrder(dto);
-    }
-
-    @GetMapping("/user/{userId}")
-    public List<OrderResponseDTO> getOrdersByUser(@PathVariable Long userId) {
-        return orderService.getOrdersByUser(userId);
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequestDTO dto) {
+        return ResponseEntity.ok(orderService.createOrder(dto));
     }
 
     @GetMapping
-    public List<OrderResponseDTO> getAllOrders() {
-        return orderService.getAllOrders();
+    public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
     }
 
-    @PutMapping("/{id}/status")
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByUser(@PathVariable Long userId) {
+        List<OrderResponseDTO> orders = orderService.getOrdersByUser(userId);
+        return ResponseEntity.ok(orders);
+    }
+
+
+    @PatchMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> body
@@ -62,10 +56,10 @@ public class OrderController {
         }
 
         try {
-            OrderResponseDTO updated = orderService.updateOrderStatus(id, newStatus);
+            Order updated = orderService.updateStatus(id, newStatus);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
+            return ResponseEntity.status(404).body("Pedido não encontrado");
         }
     }
 

@@ -22,7 +22,6 @@ public class AuthService {
     private AdminCodeRepository adminCodeRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     // ======================
     // LOGIN
@@ -38,9 +37,8 @@ public class AuthService {
         if (!passwordEncoder.matches(loginDTO.password(), user.getPasswordHash()))
             return Optional.empty();
 
-        // Verifica se usuário está ativo
-        if ("inactive".equals(user.getStatus()))
-            return Optional.empty();
+        // ⚠️ REMOVIDO bloqueio interno de "inactive"
+        // LoginController irá tratar isso
 
         return Optional.of(user);
     }
@@ -80,9 +78,12 @@ public class AuthService {
         user.setEmail(dto.getEmail());
         user.setPhone(dto.getPhone());
         user.setCpf(dto.getCpf());
-        user.setPasswordHash(encoder.encode(dto.getPassword()));
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         user.setUserType(dto.getUserType().toLowerCase());
-        user.setStatus(dto.getUserType().equalsIgnoreCase("admin") ? "active" : "inactive");
+
+        // 🟢 TODOS   começam INATIVOS
+        user.setStatus("inactive");
+
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(null);
 
@@ -97,3 +98,4 @@ public class AuthService {
     }
 
 }
+

@@ -1,28 +1,38 @@
 package com.inter.clubedafabrica.services;
 
+import com.inter.clubedafabrica.entities.AdminCode;
 import com.inter.clubedafabrica.repositories.AdminCodeRepository;
 
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 
 @Service
-@RequiredArgsConstructor
 public class AdminCodeService {
 
-    private final AdminCodeRepository adminRepo;
+    @Autowired
+    private AdminCodeRepository adminCodeRepository;
+
+    public AdminCode generateNewCode() {
+    String generatedCode = "ADMIN" + (int)(Math.random() * 9000 + 1000);
+
+    AdminCode code = new AdminCode();
+    code.setCode(generatedCode);
+    code.setIsUsed(false);
+    code.setCreatedAt(LocalDateTime.now());
+    code.setCreatedBy(1L);
+
+    return adminCodeRepository.save(code);
+    }
 
     public boolean verifyAdminCode(String code) {
-        return adminRepo.existsByCodeAndIsUsedFalse(code);
-    }
-
-    public void markAsUsed(String code, Long userId) {
-        adminRepo.findByCode(code).ifPresent(admin -> {
-        admin.setIsUsed(true);
-        admin.setUsedBy(userId);
-        admin.setUsedAt(LocalDateTime.now());
-        adminRepo.save(admin);
-    });
-    }
+    return adminCodeRepository.findByCodeAndIsUsedFalse(code)
+            .isPresent();
 }
+
+
+}
+

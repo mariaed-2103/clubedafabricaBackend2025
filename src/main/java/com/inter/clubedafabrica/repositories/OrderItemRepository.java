@@ -18,5 +18,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     // Lista itens pelo ID dos itens (usado pelo /items)
     List<OrderItem> findByIdIn(List<Long> ids);
+
 }
 

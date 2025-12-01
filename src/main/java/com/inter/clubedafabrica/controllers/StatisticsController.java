@@ -30,11 +30,11 @@ public class StatisticsController {
 
         List<Order> completedOrders = orderRepository.findByStatus("completed");
         List<Long> orderIds = completedOrders.stream().map(Order::getId).toList();
-
         List<OrderItem> items = orderItemRepository.findByOrder_IdIn(orderIds);
-        List<Product> products = productRepository.findAll();
 
-        // --- HISTOGRAMA ---
+        // ===================== HISTOGRAMA =====================
+        List<Map<String, Object>> histogramList = new ArrayList<>();
+
         Map<String, Integer> histogram = new HashMap<>();
 
         for (OrderItem item : items) {
@@ -49,44 +49,61 @@ public class StatisticsController {
             histogram.put(key, histogram.getOrDefault(key, 0) + quantity);
         }
 
-        stats.put("histogram", histogram);
+        histogram.forEach((faixa, quantidade) -> {
+            histogramList.add(Map.of(
+                "faixa", faixa,
+                "quantidade", quantidade
+            ));
+        });
 
-        // --- FATURAMENTO POR MARCA ---
-        Map<String, Double> brandRevenue = new HashMap<>();
+        stats.put("histogram", histogramList);
 
-        for (OrderItem item : items) {
-    
-            Product p = item.getProduct();  // 🔥 Agora funciona
+        // ===================== FATURAMENTO POR "MARCA" (NOME DO PRODUTO) =====================
+            List<Map<String, Object>> brandList = new ArrayList<>();
+            Map<String, Double> brandRevenue = new HashMap<>();
 
-            if (p == null) continue;
+            for (OrderItem item : items) {
+                Product p = item.getProduct();
+                if (p == null) continue;
 
-            String brand = p.getName().split("-")[0].trim();
-            double revenue = item.getUnitPrice() * item.getQuantity();
+                // usa o NOME do produto como rótulo no gráfico
+                String brand;
 
-            brandRevenue.put(brand, brandRevenue.getOrDefault(brand, 0.0) + revenue);
-        }
+                if (p.getBrand() != null && !p.getBrand().isBlank()) {
+                    // se um dia você preencher brand, usa brand
+                    brand = p.getBrand();
+                } else {
+                    // hoje: usa o nome do produto
+                    brand = p.getName();
+                }
 
-        stats.put("brands", brandRevenue);
+                double revenue = item.getUnitPrice() * item.getQuantity();
 
-        // --- PRODUTO MAIS VENDIDO ---
-        
-        // --- PRODUTO MAIS VENDIDO ---
+                brandRevenue.put(brand, brandRevenue.getOrDefault(brand, 0.0) + revenue);
+            }
+
+            brandRevenue.forEach((marca, faturamento) -> {
+                brandList.add(Map.of(
+                    "marca", marca,
+                    "faturamento", faturamento
+                ));
+            });
+
+            stats.put("brands", brandList);
+
+
+        // ===================== PRODUTO MAIS VENDIDO =====================
         Map<Long, Integer> productQty = new HashMap<>();
 
         for (OrderItem item : items) {
-
             Product product = item.getProduct();
-
-            if (product == null) {
-                // item antigo ou inconsistente → pula
-                continue;
-            }
+            if (product == null) continue;
 
             Long productId = product.getId();
 
             productQty.put(
-                    productId,
-                    productQty.getOrDefault(productId, 0) + item.getQuantity()
+                productId,
+                productQty.getOrDefault(productId, 0) + item.getQuantity()
             );
         }
 
@@ -97,38 +114,54 @@ public class StatisticsController {
                 .orElse(null);
 
         if (topProductId != null) {
-            Product topProduct = products.stream()
-                    .filter(p -> p.getId().equals(topProductId))
-                    .findFirst()
-                    .orElse(null);
+            Product topProduct = productRepository.findById(topProductId).orElse(null);
 
-            stats.put("mostSold", Map.of(
-                    "product", topProduct,
-                    "quantity", productQty.get(topProductId)
-            ));
+            Map<String, Object> mostSoldMap = new HashMap<>();
+            mostSoldMap.put("name", topProduct != null ? topProduct.getName() : "Indefinido");
+            mostSoldMap.put("price", topProduct != null ? topProduct.getPrice() : 0);
+            mostSoldMap.put("image_url", topProduct != null ? topProduct.getImageUrl() : null);
+            mostSoldMap.put("totalSold", productQty.getOrDefault(topProductId, 0));
+
+            stats.put("mostSold", mostSoldMap);
         }
 
-        // --- TICKET MÉDIO ---
+
+        // ===================== TICKET =====================
         List<Double> tickets = completedOrders.stream()
-                .map(o -> o.getTotalAmount())
+                .map(Order::getTotalAmount)
                 .toList();
 
         if (!tickets.isEmpty()) {
             double mean = tickets.stream().mapToDouble(Double::doubleValue).average().orElse(0);
 
-            double max = tickets.stream().mapToDouble(Double::doubleValue).max().orElse(0);
-            double min = tickets.stream().mapToDouble(Double::doubleValue).min().orElse(0);
+            double variance = tickets.stream()
+                    .mapToDouble(v -> Math.pow(v - mean, 2))
+                    .average()
+                    .orElse(0);
 
-            Map<String, Object> ticketStats = new HashMap<>();
-            ticketStats.put("mean", mean);
-            ticketStats.put("max", max);
-            ticketStats.put("min", min);
-            ticketStats.put("amplitude", max - min);
+            double stdDev = Math.sqrt(variance);
 
-            stats.put("ticket", ticketStats);
+            double meanDeviation = tickets.stream()
+                    .mapToDouble(v -> Math.abs(v - mean))
+                    .average()
+                    .orElse(0);
+
+            double amplitude = Collections.max(tickets) - Collections.min(tickets);
+
+            double coef = (stdDev / mean) * 100;
+
+            stats.put("ticket", Map.of(
+                    "mean", String.format("%.2f", mean),
+                    "variance", String.format("%.2f", variance),
+                    "stdDev", String.format("%.2f", stdDev),
+                    "meanDeviation", String.format("%.2f", meanDeviation),
+                    "amplitude", String.format("%.2f", amplitude),
+                    "coefficientOfVariation", String.format("%.2f", coef)
+            ));
         }
 
         return stats;
     }
+
 }
 

@@ -30,11 +30,12 @@ public class StockMovementController {
     @PostMapping
     public ResponseEntity<StockMovement> createMovement(@RequestBody StockMovement movement) {
 
-        if (movement.getProduct() == null || movement.getProduct().getId() == null) {
+        // validação certa
+        if (movement.getProductId() == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        Product product = productRepository.findById(movement.getProduct().getId())
+        Product product = productRepository.findById(movement.getProductId())
                 .orElse(null);
 
         if (product == null) {
@@ -55,6 +56,7 @@ public class StockMovementController {
 
         return ResponseEntity.ok(saved);
     }
+
 }
 
 

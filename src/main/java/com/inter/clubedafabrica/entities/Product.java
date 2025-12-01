@@ -17,7 +17,10 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    // 👉 ADICIONAR ESTE CAMPO:
+    @Column(nullable = true)
+    private String brand;
+
     @Column(nullable = false, length = 150)
     private String name;
 
@@ -25,17 +28,14 @@ public class Product {
     private String description;
 
     @Column(name = "image_url")
-    private String imageUrl;   // 🔥 AGORA O SERVICE FUNCIONA
+    private String imageUrl;   
 
-    @NotNull
     @Column(nullable = false)
     private Double price;
 
-    @NotNull
     @Column(nullable = false)
     private Integer stock;
 
-    @NotNull
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

@@ -4,10 +4,11 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
+@Data
 @Entity
 @Table(name = "orders")
-@Data
 public class Order {
 
     @Id
@@ -26,6 +27,9 @@ public class Order {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
 
@@ -34,6 +38,30 @@ public class Order {
 
     @Column(name = "pickup_time")
     private String pickupTime;
+    
+        // ============================
+    // TOTAL DO PEDIDO (SOMA ITENS)
+    // ============================
+    public double getTotal() {
+        if (items == null || items.isEmpty()) {
+            return 0.0;
+        }
+
+        return items.stream()
+                .filter(Objects::nonNull)
+                .mapToDouble(item -> {
+                    if (item.getTotal() != null) {
+                        return item.getTotal();
+                    }
+
+                    double qty = item.getQuantity() != null ? item.getQuantity() : 0;
+                    double unit = item.getUnitPrice() != null ? item.getUnitPrice() : 0.0;
+
+                    return qty * unit;
+                })
+                .sum();
+    }
+
 
     
 }

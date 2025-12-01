@@ -1,10 +1,5 @@
 package com.inter.clubedafabrica.services;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import com.inter.clubedafabrica.entities.Order;
 import com.inter.clubedafabrica.entities.OrderItem;
 import com.inter.clubedafabrica.entities.Product;
@@ -14,34 +9,26 @@ import com.inter.clubedafabrica.entities.DTOs.OrderItemDTO;
 import com.inter.clubedafabrica.entities.DTOs.OrderItemResponseDTO;
 import com.inter.clubedafabrica.entities.DTOs.OrderRequestDTO;
 import com.inter.clubedafabrica.entities.DTOs.OrderResponseDTO;
-import com.inter.clubedafabrica.repositories.OrderItemRepository;
 import com.inter.clubedafabrica.repositories.OrderRepository;
+import com.inter.clubedafabrica.repositories.OrderItemRepository;
 import com.inter.clubedafabrica.repositories.ProductRepository;
 import com.inter.clubedafabrica.repositories.ProfileRepository;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderItemRepository itemRepository;
+    private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final ProfileRepository profileRepository;
 
-    public OrderService(
-            OrderRepository orderRepository,
-            OrderItemRepository itemRepository,
-            ProductRepository productRepository,
-            ProfileRepository profileRepository
-    ) {
-        this.orderRepository = orderRepository;
-        this.itemRepository = itemRepository;
-        this.productRepository = productRepository;
-        this.profileRepository = profileRepository;
-    }
-
-    // ================================
-    // CRIAR PEDIDO
-    // ================================
     public Order createOrder(OrderRequestDTO dto) {
 
         Profile user = profileRepository.findById(dto.userId())
@@ -56,14 +43,12 @@ public class OrderService {
         order.setStatus("pending");
         order.setTotalAmount(total);
         order.setCreatedAt(LocalDateTime.now());
-
-        // 🔥 salvar no backend
         order.setPickupDate(dto.pickupDate());
         order.setPickupTime(dto.pickupTime());
 
         Order savedOrder = orderRepository.save(order);
 
-        for (OrderItemDTO i : dto.items()) {
+        for (OrderRequestDTO.Item i : dto.items()) {
 
             Product product = productRepository.findById(i.productId())
                     .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
@@ -75,75 +60,62 @@ public class OrderService {
             item.setUnitPrice(i.unitPrice());
             item.setTotal(i.unitPrice() * i.quantity());
 
-            itemRepository.save(item);
+            orderItemRepository.save(item);
         }
 
         return savedOrder;
     }
 
-
-    // ================================
-    // LISTA PEDIDOS DO USUÁRIO
-    // ================================
-    public List<OrderResponseDTO> getOrdersByUser(Long userId) {
-
-        List<Order> orders = orderRepository.findByUser_IdOrderByCreatedAtDesc(userId);
-
-        return orders.stream().map(order -> mapToDTO(order)).toList();
-    }
-
-
-    // ================================
-    // LISTA TODOS (ADMIN)
-    // ================================
     public List<OrderResponseDTO> getAllOrders() {
-        return orderRepository.findAll().stream()
-                .map(order -> mapToDTO(order))
-                .toList();
+    return orderRepository.findAll()
+            .stream()
+            .map(this::mapToDTO)
+            .toList();
     }
 
+    private OrderResponseDTO mapToDTO(Order order) {
 
-    // ================================
-    // MUDAR STATUS
-    // ================================
-    public OrderResponseDTO updateOrderStatus(Long orderId, String newStatus) {
+    List<OrderItemResponseDTO> itemDTOs = orderItemRepository.findByOrder_Id(order.getId())
+            .stream()
+            .map(item -> new OrderItemResponseDTO(
+                    item.getId(),
+                    item.getProduct().getId(),
+                    item.getQuantity(),
+                    item.getUnitPrice(),
+                    item.getTotal(),
+                    item.getProduct().getName(),
+                    item.getProduct().getImageUrl()
+            ))
+            .toList();
 
-        Order order = orderRepository.findById(orderId)
+    return new OrderResponseDTO(
+            order.getId(),
+            order.getStatus(),
+            order.getTotalAmount(),
+            order.getCreatedAt(),
+            new CustomerDTO(order.getUser().getName(), order.getUser().getEmail()),
+            order.getPickupDate(),
+            order.getPickupTime(),
+            itemDTOs
+    );
+    }
+
+    public Order updateStatus(Long id, String newStatus) {
+
+        Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
         order.setStatus(newStatus);
-        orderRepository.save(order);
+        order.setUpdatedAt(LocalDateTime.now());
 
-        return mapToDTO(order);
+        return orderRepository.save(order);
     }
 
-    // ================================
-    // FUNÇÃO QUE MONTA O DTO
-    // ================================
-    private OrderResponseDTO mapToDTO(Order order) {
+    public List<OrderResponseDTO> getOrdersByUser(Long userId) {
+    return orderRepository.findByUser_IdOrderByCreatedAtDesc(userId)
+            .stream()
+            .map(this::mapToDTO)
+            .toList();
+}
 
-        List<OrderItemResponseDTO> itemDTOs = itemRepository.findByOrder_Id(order.getId())
-                .stream()
-                .map(item -> new OrderItemResponseDTO(
-                        item.getId(),
-                        item.getProduct().getId(),
-                        item.getQuantity(),
-                        item.getUnitPrice(),
-                        item.getTotal(),
-                        item.getProduct().getName(),
-                        item.getProduct().getImageUrl()
-                ))
-                .toList();
-
-        return new OrderResponseDTO(
-                order.getId(),
-                order.getStatus(),
-                order.getTotalAmount(),
-                order.getCreatedAt(),
-                new CustomerDTO(order.getUser().getName(), order.getUser().getEmail()),
-                order.getPickupDate(),
-                order.getPickupTime(),
-                itemDTOs
-        );
-    }
 }

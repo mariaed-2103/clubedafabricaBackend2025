@@ -2,6 +2,7 @@ package com.inter.clubedafabrica.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "order_items")
@@ -13,6 +14,7 @@ public class OrderItem {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
@@ -25,5 +27,6 @@ public class OrderItem {
     @Column(name = "unit_price")
     private Double unitPrice;
 
+    @Column(nullable = false)
     private Double total;
 }

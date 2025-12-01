@@ -58,6 +58,11 @@ public class ProfileController {
 
         Profile existing = optional.get();
 
+        // Atualizar STATUS
+        if (updates.getStatus() != null && !updates.getStatus().isBlank()) {
+            existing.setStatus(updates.getStatus());
+        }
+
         // Atualizar nome
         if (updates.getName() != null && !updates.getName().isBlank()) {
             existing.setName(updates.getName());
@@ -66,7 +71,6 @@ public class ProfileController {
         // Atualizar email
         if (updates.getEmail() != null && !updates.getEmail().isBlank()) {
 
-            // Impedir e-mail duplicado
             if (repo.findByEmail(updates.getEmail())
                     .filter(u -> !u.getId().equals(existing.getId()))
                     .isPresent()) {

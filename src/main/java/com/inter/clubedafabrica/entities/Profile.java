@@ -29,8 +29,8 @@ public class Profile {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl; // opcional
 
-    @Column(nullable = false, length = 20)
-    private String status; // active / inactive
+    @Column(nullable = false)
+    private String status = "inactive";
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

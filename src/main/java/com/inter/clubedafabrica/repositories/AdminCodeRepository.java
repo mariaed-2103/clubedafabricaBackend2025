@@ -21,4 +21,7 @@ public interface AdminCodeRepository extends JpaRepository<AdminCode, Long> {
     @Transactional
     @Query("UPDATE AdminCode a SET a.isUsed = true, a.usedBy = :userId, a.usedAt = CURRENT_TIMESTAMP WHERE a.code = :code")
     void markAsUsed(String code, Long userId);
+
+    Optional<AdminCode> findByCodeAndIsUsedFalse(String code);
+
 }

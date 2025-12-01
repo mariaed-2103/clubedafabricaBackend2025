@@ -18,15 +18,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000") // endereço do front-end
+@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
     private final AuthService authService;
     private final AdminCodeService adminCodeService;
 
-    // ======================
     // SIGNUP
-    // ======================
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupDTO dto) {
         try {
@@ -37,9 +35,7 @@ public class AuthController {
         }
     }
 
-    // ======================
     // LOGIN
-    // ======================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
         var userOpt = authService.login(dto);
@@ -49,6 +45,10 @@ public class AuthController {
         }
 
         Profile p = userOpt.get();
+
+        if (p.getStatus().equals("inactive")) {
+            return ResponseEntity.status(403).body("Aguardando ativação pelo administrador");
+        }
 
         LoginResponse res = new LoginResponse(
                 p.getId(),
@@ -63,10 +63,7 @@ public class AuthController {
         return ResponseEntity.ok(res);
     }
 
-
-    // ======================
     // VERIFY ADMIN CODE
-    // ======================
     @PostMapping("/verify-admin")
     public ResponseEntity<Boolean> verifyAdmin(@RequestBody Map<String, String> body) {
         String code = body.get("code");

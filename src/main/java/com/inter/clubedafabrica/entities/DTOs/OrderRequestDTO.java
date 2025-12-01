@@ -4,8 +4,13 @@ import java.util.List;
 
 public record OrderRequestDTO(
         Long userId,
-        List<OrderItemDTO> items,
         String pickupDate,
-        String pickupTime
-) {}
- 
+        String pickupTime,
+        List<Item> items
+) {
+    public static record Item(
+            Long productId,
+            int quantity,
+            Double unitPrice
+    ) {}
+}
