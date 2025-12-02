@@ -19,24 +19,26 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private Profile user;
 
+    @Column(nullable = false)
     private String status;
 
-    @Column(name = "total_amount")
+
+    @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
 
-    @Column(name = "pickup_date")
+    @Column(name = "pickup_date", nullable = false)
     private String pickupDate;
 
-    @Column(name = "pickup_time")
+    @Column(name = "pickup_time", nullable = false)
     private String pickupTime;
     
         // ============================

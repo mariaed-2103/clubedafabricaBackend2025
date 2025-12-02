@@ -67,15 +67,15 @@ public class OrderService {
     }
 
     public List<OrderResponseDTO> getAllOrders() {
-    return orderRepository.findAll()
-            .stream()
-            .map(this::mapToDTO)
-            .toList();
-    }
+    return orderRepository.findAllByOrderByCreatedAtDesc()
+        .stream()
+        .map(this::mapToDTO)
+        .toList();
+        }
 
-    private OrderResponseDTO mapToDTO(Order order) {
 
-    List<OrderItemResponseDTO> itemDTOs = orderItemRepository.findByOrder_Id(order.getId())
+    public OrderResponseDTO mapToDTO(Order order) {
+    var itemDTOs = orderItemRepository.findByOrder_Id(order.getId())
             .stream()
             .map(item -> new OrderItemResponseDTO(
                     item.getId(),
@@ -90,32 +90,72 @@ public class OrderService {
 
     return new OrderResponseDTO(
             order.getId(),
-            order.getStatus(),
+            order.getCreatedAt().toString(),
             order.getTotalAmount(),
-            order.getCreatedAt(),
-            new CustomerDTO(order.getUser().getName(), order.getUser().getEmail()),
+            order.getStatus(),
+            order.getUser().getName(),
+            order.getUser().getEmail(),
             order.getPickupDate(),
             order.getPickupTime(),
             itemDTOs
     );
-    }
+}
+
 
     public Order updateStatus(Long id, String newStatus) {
-
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        // Não permitir alterar status se já estiver cancelado
+        if ("cancelled".equalsIgnoreCase(order.getStatus())) {
+        throw new RuntimeException("Não é possível alterar o status de um pedido cancelado");
+        }
+
+        if ("completed".equalsIgnoreCase(order.getStatus())) {
+        throw new RuntimeException("Não é possível alterar o status de um pedido concluído");
+        }
 
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
 
         return orderRepository.save(order);
-    }
+        }
 
+
+        
     public List<OrderResponseDTO> getOrdersByUser(Long userId) {
-    return orderRepository.findByUser_IdOrderByCreatedAtDesc(userId)
-            .stream()
-            .map(this::mapToDTO)
-            .toList();
-}
+        return orderRepository
+        .findByUser_IdOrderByCreatedAtDesc(userId)   
+        .stream()
+        .map(this::mapToDTO)
+        .toList();
+        }
+
+
+        public void cancelByUser(Long orderId, Long userId) {
+                Order order = orderRepository.findById(orderId)
+                        .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+                //Garante que o pedido é do usuário que está tentando cancelar
+                if (!order.getUser().getId().equals(userId)) {
+                        throw new RuntimeException("Você não pode cancelar pedidos de outro usuário");
+                }
+
+                //Regras: não pode cancelar se já estiver concluído ou cancelado
+                if ("completed".equalsIgnoreCase(order.getStatus())
+                        || "cancelled".equalsIgnoreCase(order.getStatus())) {
+                        throw new RuntimeException("Não é possível cancelar este pedido");
+                }
+
+                order.setStatus("cancelled");
+                order.setUpdatedAt(LocalDateTime.now());
+
+                orderRepository.save(order);
+        }
+
+
+
+
+
 
 }

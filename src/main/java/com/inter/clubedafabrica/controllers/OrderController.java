@@ -32,15 +32,24 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
-    }
+        public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
+
+            List<OrderResponseDTO> list = orderRepository.findAll()
+                    .stream()
+                    .map(orderService::mapToDTO)
+                    .toList();
+
+            return ResponseEntity.ok(list);
+        }
+
 
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<OrderResponseDTO>> getOrdersByUser(@PathVariable Long userId) {
-        List<OrderResponseDTO> orders = orderService.getOrdersByUser(userId);
-        return ResponseEntity.ok(orders);
+
+        List<OrderResponseDTO> list = orderService.getOrdersByUser(userId);
+
+        return ResponseEntity.ok(list);
     }
 
 
@@ -62,5 +71,25 @@ public class OrderController {
             return ResponseEntity.status(404).body("Pedido não encontrado");
         }
     }
+
+    @PatchMapping("/{id}/cancel")
+        public ResponseEntity<?> cancelOrderByUser(
+                @PathVariable Long id,
+                @RequestBody Map<String, Long> body
+        ) {
+            Long userId = body.get("userId");
+
+            if (userId == null) {
+                return ResponseEntity.badRequest().body("userId é obrigatório");
+            }
+
+            try {
+                orderService.cancelByUser(id, userId);
+                return ResponseEntity.ok("Pedido cancelado com sucesso!");
+            } catch (RuntimeException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+        }
+
 
 }
